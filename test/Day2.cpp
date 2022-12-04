@@ -55,7 +55,7 @@ move find_move(move opp_move, outcome desired_outcome) {
 }
 
 int win_score(move opp_move, move my_move) {
-    auto result =  match_outcome(opp_move, my_move);
+    auto result = match_outcome(opp_move, my_move);
     return result * 3;
 }
 
