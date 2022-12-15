@@ -1,25 +1,9 @@
 #include <gtest/gtest.h>
 #include <fstream>
 #include <regex>
+#include "position.h"
 
 using namespace std;
-
-struct position {
-    int x;
-    int y;
-
-    bool operator<(const position &b) const {
-        return x < b.x || (x == b.x && y < b.y);
-    }
-
-    bool operator==(const position &b) const {
-        return x == b.x && y == b.y;
-    }
-
-    position operator+(const position &b) const {
-        return {x + b.x, y + b.y};
-    }
-};
 
 const string sample_input = "498,4 -> 498,6 -> 496,6\n"
                             "503,4 -> 502,4 -> 502,9 -> 494,9";
