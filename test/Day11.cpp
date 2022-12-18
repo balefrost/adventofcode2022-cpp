@@ -66,21 +66,6 @@ vector<string> regex_split(string input, const regex &splitter) {
     return result;
 }
 
-template<typename Iter>
-string string_join(Iter begin, Iter end, const string &joiner) {
-    stringstream result;
-    bool first = true;
-    for (auto current = begin; current != end; ++current) {
-        if (!first) {
-            result << joiner;
-        }
-        result << to_string(*current);
-        first = false;
-    }
-    return result.str();
-}
-
-
 TEST(Day11, regex_split) {
     ASSERT_EQ(regex_split("1", regex(":")), (vector<string>{"1"}));
     ASSERT_EQ(regex_split("1:2:3", regex(":")), (vector<string>{"1", "2", "3"}));
