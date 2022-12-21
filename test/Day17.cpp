@@ -193,48 +193,6 @@ void compress_board(vector<byte> &board, size_t &top) {
     top -= lowest;
 }
 
-template<typename T>
-struct item_comparer {
-    vector<function<strong_ordering(const T &, const T &)>> comparisons;
-
-    struct less_comparer_func {
-        vector<function<strong_ordering(const T &, const T &)>> comparisons;
-
-        bool operator()(const T &a, const T &b) {
-            for (const auto &item: comparisons) {
-                auto comparison_result = item(a, b);
-                if (comparison_result == strong_ordering::less) {
-                    return true;
-                } else if (comparison_result == strong_ordering::greater) {
-                    return false;
-                }
-            }
-
-            return false;
-        }
-    };
-
-    template<typename R>
-    item_comparer &then_by(function<R(T)> f) {
-        comparisons.push_back([f](const T &a, const T &b) {
-            return f(a) <=> f(b);
-        });
-        return *this;
-    }
-
-    template<typename R>
-    item_comparer &then_by(R T::* f) {
-        comparisons.push_back([f](const T &a, const T &b) {
-            return a.*f <=> b.*f;
-        });
-        return *this;
-    }
-
-    less_comparer_func as_less() {
-        return less_comparer_func{comparisons};
-    }
-};
-
 TEST(Day17, Part2) {
     ifstream input;
     input.open("../../test/input/day17.txt");
