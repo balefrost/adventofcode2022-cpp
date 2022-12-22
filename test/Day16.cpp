@@ -26,7 +26,7 @@ namespace day16 {
 
     struct valve_info {
         string valve_name;
-        int rate;
+        int rate {};
         vector<string> adjacent_valves;
     };
 

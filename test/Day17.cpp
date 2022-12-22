@@ -213,13 +213,13 @@ namespace day17 {
             size_t height_increased_from_last_state;
         };
 
-        auto state_comparer = item_comparer<state>()
-                .then_by(&state::pindex)
-                .then_by(&state::windex)
-                .then_by(&state::board)
-                .then_by(&state::top)
-                .then_by(&state::height_increased_from_last_state)
-                .as_less();
+    auto state_comparer = compare_items<state>()
+            .then_by(&state::pindex)
+            .then_by(&state::windex)
+            .then_by(&state::board)
+            .then_by(&state::top)
+            .then_by(&state::height_increased_from_last_state)
+            .as_less();
 
         auto p = iterate_until_cycle<state>(
                 state{0, 0, board, 0, 0},

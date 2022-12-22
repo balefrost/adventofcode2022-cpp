@@ -196,7 +196,7 @@ inline namespace {
     }
 
     template<typename T>
-    class item_comparer {
+    class compare_items {
     private:
         vector<function<strong_ordering(const T &, const T &)>> comparisons;
     public:
@@ -223,7 +223,7 @@ inline namespace {
         };
 
         template<typename R>
-        item_comparer &then_by(function<R(T)> f) {
+        compare_items &then_by(function<R(T)> f) {
             comparisons.push_back([f](const T &a, const T &b) {
                 return f(a) <=> f(b);
             });
@@ -231,11 +231,22 @@ inline namespace {
         }
 
         template<typename R>
-        item_comparer &then_by(R T::* f) {
+        compare_items &then_by(R T::* f) {
             comparisons.push_back([f](const T &a, const T &b) {
                 return a.*f <=> b.*f;
             });
             return *this;
+        }
+
+        strong_ordering compare(const T& a, const T& b) const {
+            for (const auto &item: comparisons) {
+                auto comparison_result = item(a, b);
+                if (comparison_result != strong_ordering::equal) {
+                    return comparison_result;
+                }
+            }
+
+            return strong_ordering::equal;
         }
 
         less_comparer_func as_less() {

@@ -53,7 +53,7 @@ inline namespace {
         return result;
     }
 
-    auto pos3_comparer = item_comparer<pos3>()
+    auto pos3_comparer = compare_items<pos3>()
             .then_by(&pos3::x)
             .then_by(&pos3::y)
             .then_by(&pos3::z)
