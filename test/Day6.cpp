@@ -3,43 +3,47 @@
 
 using namespace std;
 
-int find_marker_pos(const string &line, int message_size) {
-    set<char> seen;
-    int i = 0;
-    for (; i < line.length() - message_size; ++i) {
-        seen.clear();
-        for (auto j = 0; j < message_size; ++j) {
-            seen.insert(line[i + j]);
+namespace day6 {
+
+    int find_marker_pos(const string &line, int message_size) {
+        set<char> seen;
+        int i = 0;
+        for (; i < line.length() - message_size; ++i) {
+            seen.clear();
+            for (auto j = 0; j < message_size; ++j) {
+                seen.insert(line[i + j]);
+            }
+            if (seen.size() == message_size) {
+                break;
+            }
         }
-        if (seen.size() == message_size) {
-            break;
-        }
+
+        int position = i + message_size;
+
+        return position;
     }
 
-    int position = i + message_size;
+    TEST(Day6, Part1) {
 
-    return position;
-}
+        ifstream input;
+        input.open("../../test/input/day6.txt");
+        string line;
+        getline(input, line);
 
-TEST(Day6, Part1) {
+        auto position = find_marker_pos(line, 4);
 
-    ifstream input;
-    input.open("../../test/input/day6.txt");
-    string line;
-    getline(input, line);
+        cout << position << "\n";
+    }
 
-    auto position = find_marker_pos(line, 4);
-    
-    cout << position << "\n";
-}
+    TEST(Day6, Part2) {
+        ifstream input;
+        input.open("../../test/input/day6.txt");
+        string line;
+        getline(input, line);
 
-TEST(Day6, Part2) {
-    ifstream input;
-    input.open("../../test/input/day6.txt");
-    string line;
-    getline(input, line);
+        auto position = find_marker_pos(line, 14);
 
-    auto position = find_marker_pos(line, 14);
+        cout << position << "\n";
+    }
 
-    cout << position << "\n";
 }
