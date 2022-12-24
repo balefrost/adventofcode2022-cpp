@@ -223,7 +223,7 @@ inline namespace {
         };
 
         template<typename R>
-        compare_items &then_by(function<R(T)> f) {
+        compare_items &then_by(function<R(const T)> f) {
             comparisons.push_back([f](const T &a, const T &b) {
                 return f(a) <=> f(b);
             });
@@ -234,6 +234,28 @@ inline namespace {
         compare_items &then_by(R T::* f) {
             comparisons.push_back([f](const T &a, const T &b) {
                 return a.*f <=> b.*f;
+            });
+            return *this;
+        }
+
+        template<typename R>
+        compare_items &then_by_reversed(R T::* f) {
+            comparisons.push_back([f](const T &a, const T &b) {
+                return b.*f <=> a.*f;
+            });
+            return *this;
+        }
+
+        compare_items &then_by_intrinsic() {
+            comparisons.push_back([](const T &a, const T &b) {
+                return a <=> b;
+            });
+            return *this;
+        }
+
+        compare_items &then_by_comparer(const compare_items<T> &comparer) {
+            comparisons.push_back([comparer](const T &a, const T &b) {
+                return comparer.compare(a, b);
             });
             return *this;
         }
@@ -251,6 +273,32 @@ inline namespace {
 
         less_comparer_func as_less() {
             return less_comparer_func{comparisons};
+        }
+    };
+
+    template <typename Coll>
+    class push_iterator {
+    private:
+        Coll *coll;
+    public:
+        explicit push_iterator(Coll &coll) : coll(addressof(coll)) {}
+
+        push_iterator& operator++() {
+            return *this;
+        }
+        push_iterator operator++(int) {
+            return *this;
+        }
+        push_iterator& operator*() {
+            return *this;
+        }
+        push_iterator& operator=(const Coll::value_type &v) {
+            coll->push(v);
+            return *this;
+        }
+        push_iterator& operator=(const Coll::value_type &&v) {
+            coll->push(std::move(v));
+            return *this;
         }
     };
 }
