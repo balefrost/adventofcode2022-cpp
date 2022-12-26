@@ -301,4 +301,93 @@ inline namespace {
             return *this;
         }
     };
+
+    template<typename T>
+    T sign(T value) {
+        return value < 0 ? -1 :
+               value > 0 ? 1 :
+               0;
+    }
+
+    //see https://vladris.com/blog/2018/10/13/arithmetic-overflow-and-underflow.html
+    template<typename T1, typename T2>
+    constexpr bool AdditionOverflows(const T1 &a, const T2 &b) {
+        typedef typename common_type<T1, T2>::type ct;
+        return (b >= 0) && (a > (std::numeric_limits<ct>::max() - b));
+    }
+
+    template<typename T1, typename T2>
+    constexpr bool AdditionUnderflows(const T1 &a, const T2 &b) {
+        typedef typename common_type<T1, T2>::type ct;
+        return (b < 0) && (a < std::numeric_limits<ct>::min() - b);
+    }
+
+    template<typename T1, typename T2>
+    constexpr bool MultiplicationOverflows(const T1 &a, const T2 &b) {
+        typedef typename common_type<T1, T2>::type ct;
+        if (b == 0) return false; // Avoid division by 0
+        return ((b > 0) && (a > 0) && (a > std::numeric_limits<ct>::max() / b))
+               || ((b < 0) && (a < 0) && (a < std::numeric_limits<ct>::max() / b));
+    }
+
+    template<typename T1, typename T2>
+    constexpr bool MultiplicationUnderflows(const T1 &a, const T2 &b) {
+        typedef typename common_type<T1, T2>::type ct;
+        if (b == 0) return false; // Avoid division by 0
+        return ((b > 0) && (a < 0) && (a < std::numeric_limits<ct>::min() / b))
+               || ((b < 0) && (a > 0) && (a > std::numeric_limits<ct>::min() / b));
+    }
+
+    template<typename T1, typename T2>
+    common_type<T1, T2>::type safe_add(T1 a, T2 b) {
+        if (AdditionOverflows(a, b)) {
+            throw logic_error("addition overflow");
+        }
+        if (AdditionUnderflows(a, b)) {
+            throw logic_error("addition underflow");
+        }
+
+        return a + b;
+    }
+
+    template<typename T1, typename T2>
+    common_type<T1, T2>::type safe_multiply(T1 a, T2 b) {
+        if (a == 0 || b == 0) {
+            return 0;
+        }
+
+        if (MultiplicationOverflows(a, b)) {
+            throw logic_error("multiplication overflow");
+        }
+        if (MultiplicationUnderflows(a, b)) {
+            throw logic_error("multiplication underflow");
+        }
+
+        return a * b;
+    }
+
+    //TODO: figure out how to better deduce template types
+    template<typename V, typename C>
+    void postorder_traversal(
+            const V &root,
+            const function<const C(const V &)> &get_children,
+            const function<void(const V &)> &visit
+    ) {
+        stack<V> queue;
+        queue.emplace(root);
+        set<V> seen;
+
+        while (!queue.empty()) {
+            string item = queue.top();
+            if (seen.insert(item).second) {
+                for (const auto &c: get_children(item)) {
+                    queue.push(c);
+                }
+            } else {
+                queue.pop();
+                visit(item);
+            }
+        }
+    }
+
 }

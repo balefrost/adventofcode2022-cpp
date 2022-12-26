@@ -25,13 +25,6 @@ namespace day17 {
 
     const vector<vector<string>> pieces{sym_minus, sym_plus, sym_back_l, sym_vert_i, sym_square};
 
-    template<typename T>
-    T sign(T value) {
-        return value < 0 ? -1 :
-               value > 0 ? 1 :
-               0;
-    }
-
     bool board_get(const vector<byte> &board, size_t bx, size_t by) {
         return ((board[by] >> bx) & (byte) 0x01) != (byte) 0x00;
     }
