@@ -1,13 +1,61 @@
 #pragma once
 
+#include <compare>
 #include <functional>
 #include <sstream>
 #include <stack>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 inline namespace {
-    using namespace std;
+    using std::common_type;
+    using std::function;
+    using std::iterator_traits;
+    using std::logic_error;
+    using std::map;
+    using std::pair;
+    using std::set;
+    using std::stack;
+    using std::string;
+    using std::stringstream;
+    using std::vector;
+
+    enum strong_ordering {
+        less,
+        equal,
+        greater
+    };
+
+    template <typename T>
+    struct compare_three_way {
+        strong_ordering operator()(const T& a, const T& b) {
+            return a < b ? strong_ordering::less :
+                   a > b ? strong_ordering::greater :
+                   strong_ordering::equal;
+        }
+    };
+
+//    template <>
+//    struct compare_three_way<int> {
+//        strong_ordering operator()(int a, int b) {
+//            return default_compare_three_way(a, b);
+//        }
+//    };
+//
+//    template <>
+//    struct compare_three_way<unsigned long> {
+//        strong_ordering operator()(unsigned long a, unsigned long b) {
+//            return default_compare_three_way(a, b);
+//        }
+//    };
+//
+//    template <typename T>
+//    struct compare_three_way<vector<T>> {
+//        strong_ordering operator()(const vector<T> &a, const vector<T> &b) {
+//            return default_compare_three_way(a, b);
+//        }
+//    };
 
     template<typename Iter>
     string string_join(Iter begin, Iter end, const string &joiner = ", ") {
@@ -77,7 +125,7 @@ inline namespace {
             }
 
             bool operator!=(const postorder_iter &rhs) const {
-                return !(*this == rhs);
+                return *this != rhs;
             }
 
             T *operator->() {
@@ -102,7 +150,7 @@ inline namespace {
                         stack_.pop();
                     } else {
                         fill_stack();
-                    };
+                    }
                 }
                 return *this;
             }
@@ -152,7 +200,7 @@ inline namespace {
 
             auto carry = false;
             for (auto &&item: included) {
-                if (item == false) {
+                if (!item) {
                     item = true;
                     carry = false;
                     break;
@@ -225,15 +273,15 @@ inline namespace {
         template<typename R>
         compare_items &then_by(function<R(const T)> f) {
             comparisons.push_back([f](const T &a, const T &b) {
-                return f(a) <=> f(b);
+                return compare_three_way<R>{}(f(a), f(b));
             });
             return *this;
         }
 
         template<typename R>
-        compare_items &then_by(R T::* f) {
-            comparisons.push_back([f](const T &a, const T &b) {
-                return a.*f <=> b.*f;
+        compare_items &then_by(R T::* m) {
+            comparisons.push_back([m](const T &a, const T &b) {
+                return compare_three_way<R>{}(a.*m, b.*m);
             });
             return *this;
         }
@@ -241,14 +289,14 @@ inline namespace {
         template<typename R>
         compare_items &then_by_reversed(R T::* f) {
             comparisons.push_back([f](const T &a, const T &b) {
-                return b.*f <=> a.*f;
+                return compare_three_way<R>{}(b.*f, a.*f);
             });
             return *this;
         }
 
         compare_items &then_by_intrinsic() {
             comparisons.push_back([](const T &a, const T &b) {
-                return a <=> b;
+                return compare_three_way<T>{}(a, b);
             });
             return *this;
         }
@@ -292,11 +340,11 @@ inline namespace {
         push_iterator& operator*() {
             return *this;
         }
-        push_iterator& operator=(const Coll::value_type &v) {
+        push_iterator& operator=(const typename Coll::value_type &v) {
             coll->push(v);
             return *this;
         }
-        push_iterator& operator=(const Coll::value_type &&v) {
+        push_iterator& operator=(const typename Coll::value_type &&v) {
             coll->push(std::move(v));
             return *this;
         }
@@ -339,7 +387,7 @@ inline namespace {
     }
 
     template<typename T1, typename T2>
-    common_type<T1, T2>::type safe_add(T1 a, T2 b) {
+    typename common_type<T1, T2>::type safe_add(T1 a, T2 b) {
         if (AdditionOverflows(a, b)) {
             throw logic_error("addition overflow");
         }
@@ -351,7 +399,7 @@ inline namespace {
     }
 
     template<typename T1, typename T2>
-    common_type<T1, T2>::type safe_multiply(T1 a, T2 b) {
+    typename common_type<T1, T2>::type safe_multiply(T1 a, T2 b) {
         if (a == 0 || b == 0) {
             return 0;
         }
@@ -390,4 +438,8 @@ inline namespace {
         }
     }
 
+    template <typename Key, typename Compare, typename Allocator>
+    bool set_contains(const set<Key, Compare, Allocator> &s, const Key &elem) {
+        return s.find(elem) != s.end();
+    }
 }

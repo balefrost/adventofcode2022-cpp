@@ -151,7 +151,7 @@ namespace day21 {
                     if (node != "humn") {
                         const entry &e = entries.at(node);
                         auto all_deps_ground = std::all_of(e.dependencies.begin(), e.dependencies.end(),
-                                                           [&](auto d) { return ground.contains(d); });
+                                                           [&](auto d) { return set_contains(ground, d); });
                         if (all_deps_ground) {
                             ground.insert(node);
                             results[node] = e.calculate(results);
@@ -161,7 +161,7 @@ namespace day21 {
         );
 
         //keep ground term in b
-        if (ground.contains(a) && !ground.contains(b)) {
+        if (set_contains(ground, a) && !set_contains(ground, b)) {
             swap(a, b);
         }
         auto bval = results.at(b);
@@ -173,25 +173,25 @@ namespace day21 {
             auto ll = a_entry.dependencies.at(0);
             auto rr = a_entry.dependencies.at(1);
             if (a_entry.op_sym == "+") {
-                if (ground.contains(rr)) {
+                if (set_contains(ground, rr)) {
                     bval -= results.at(rr);
                 } else {
                     bval -= results.at(ll);
                 }
             } else if (a_entry.op_sym == "-") {
-                if (ground.contains(rr)) {
+                if (set_contains(ground, rr)) {
                     bval += results.at(rr);
                 } else {
                     bval = results.at(ll) - bval;
                 }
             } else if (a_entry.op_sym == "*") {
-                if (ground.contains(rr)) {
+                if (set_contains(ground, rr)) {
                     bval /= results.at(rr);
                 } else {
                     bval /= results.at(ll);
                 }
             } else if (a_entry.op_sym == "/") {
-                if (ground.contains(rr)) {
+                if (set_contains(ground, rr)) {
                     bval *= results.at(rr);
                 } else {
                     bval = results.at(ll) / bval;
@@ -200,7 +200,7 @@ namespace day21 {
                 throw logic_error("unknown op");
             }
 
-            if (ground.contains(rr)) {
+            if (set_contains(ground, rr)) {
                 a = ll;
             } else {
                 a = rr;

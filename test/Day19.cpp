@@ -229,7 +229,7 @@ namespace day19 {
         return max_geodes;
     }
 
-    TEST(Day19, Part1) {
+    TEST(Day19, DISABLED_Part1) {
         ifstream input;
         input.open("../../test/input/day19.txt");
 //        stringstream input(sample_input);

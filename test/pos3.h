@@ -56,12 +56,20 @@ inline namespace {
     auto pos3_comparer = compare_items<pos3>()
             .then_by(&pos3::x)
             .then_by(&pos3::y)
-            .then_by(&pos3::z)
-            .as_less();
+            .then_by(&pos3::z);
 
-    typedef set<pos3, decltype(pos3_comparer)> pos3_ordered_set;
+    auto pos3_less_comparer = pos3_comparer.as_less();
+
+    template <>
+    struct compare_three_way<pos3> {
+        strong_ordering operator()(const pos3 &a, const pos3 &b) {
+            return pos3_comparer.compare(a, b);
+        }
+    };
+
+    typedef set<pos3, decltype(pos3_less_comparer)> pos3_ordered_set;
 
     pos3_ordered_set make_pos3_ordered_set() {
-        return pos3_ordered_set(pos3_comparer);
+        return pos3_ordered_set(pos3_less_comparer);
     }
 }

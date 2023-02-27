@@ -89,7 +89,7 @@ namespace day18 {
             auto [_, inserted] = seen.insert(f);
             if (inserted) {
                 for (const auto &adj: pos3_adjacent(f)) {
-                    if (bounds.contains(adj) && !positions.contains(adj)) {
+                    if (bounds.contains(adj) && !set_contains(positions, adj)) {
                         frontier.insert(adj);
                     }
                 }
@@ -100,7 +100,7 @@ namespace day18 {
         for (const auto &air: seen) {
             auto adj = pos3_adjacent(air);
             for (const auto &a: pos3_adjacent(air)) {
-                if (positions.contains(a)) {
+                if (set_contains(positions, a)) {
                     ++surfaces;
                 }
             }
