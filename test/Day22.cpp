@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <fstream>
 #include <regex>
+#include "pos2.h"
 
 using namespace std;
 
@@ -22,51 +23,6 @@ namespace day22 {
                                 "10R5L5R10L4R5L5";
 
     const regex directions_regex("(?:(\\d+)|([RL]))");
-
-    /**
-     * Assumes Y increases top-to-bottom; X increases left-to-right (i.e. screen coords, not math coords)
-     */
-    struct pos2 {
-        int x;
-        int y;
-
-        pos2 rotate_cw_about_origin() {
-            return {-y, x};
-        }
-
-        pos2 rotate_ccw_about_origin() {
-            return {y, -x};
-        }
-
-        pos2 operator+(const pos2 &b) const {
-            return {x + b.x, y + b.y};
-        }
-
-        pos2 &operator+=(const pos2 &b) {
-            x += b.x;
-            y += b.y;
-            return *this;
-        }
-
-        pos2 operator-() const {
-            return {-x, -y};
-        }
-
-        pos2 operator-(const pos2 &b) const {
-            return {x - b.x, y - b.y};
-        }
-
-        pos2 &operator-=(const pos2 &b) {
-            x -= b.x;
-            y -= b.y;
-            return *this;
-        }
-    };
-
-    ostream &operator<<(ostream &out, const pos2 &p) {
-        out << "{" << p.x << "," << p.y << "}";
-        return out;
-    }
 
     char get_map(const vector<string> &map, pos2 pos) {
         if (pos.y < 0 || pos.y >= map.size()) {
