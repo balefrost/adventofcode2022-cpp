@@ -1,13 +1,10 @@
 #include <gtest/gtest.h>
-#include <algorithm>
 #include <exception>
 #include <fstream>
 #include <numeric>
 #include <queue>
 #include <regex>
-#include <set>
 #include <unordered_map>
-#include <unordered_set>
 #include "pos2.h"
 #include "util.h"
 
@@ -50,10 +47,10 @@ namespace day24 {
 
     struct Input {
         map<char, vector<string>> storms;
-        pos2_t<long long> start;
-        pos2_t<long long> dest;
-        long long width;
-        long long height;
+        pos2_t<long long> start{0, 0};
+        pos2_t<long long> dest{0, 0};
+        long long width{0};
+        long long height{0};
 
         [[nodiscard]] bool is_pos_safe(long long steps, pos2_t<long long> pos) const {
             if (pos == start || pos == dest) {
@@ -116,7 +113,7 @@ namespace day24 {
 
     struct safe_cache {
         explicit safe_cache(const Input &input) {
-            auto iterations = lcm(input.width, input.height);
+            iterations = lcm(input.width, input.height);
             safe_.resize(iterations);
             for (auto iter = 0; iter < iterations; ++iter) {
                 auto &safe_iter = safe_.at(iter);
@@ -134,7 +131,7 @@ namespace day24 {
         }
 
         [[nodiscard]] bool get(const adj_entry &entry) const {
-            const vector<vector<bool>> &step = safe_.at(entry.steps);
+            const vector<vector<bool>> &step = safe_.at(entry.steps % iterations);
             if (entry.pos.y + 1 >= step.size()) {
                 return false;
             }
@@ -146,54 +143,9 @@ namespace day24 {
         }
 
     private:
+        size_t iterations;
         vector<vector<vector<bool>>> safe_;
     };
-
-    map<adj_entry, vector<adj_entry>> find_adjacency(const Input &input) {
-        safe_cache cache(input);
-        auto iterations = lcm(input.width, input.height);
-
-        const vector<pos2_t<long long>> dirs{
-                {0,  0},
-                {0,  -1},
-                {0,  1},
-                {-1, 0},
-                {1,  0},
-        };
-
-        map<adj_entry, vector<adj_entry>> result;
-
-        for (size_t iter = 0; iter < iterations; ++iter) {
-            auto next_iter = (iter + 1) % iterations;
-            for (auto y = -1; y < input.height + 1; ++y) {
-                for (auto x = -1; x < input.width + 1; ++x) {
-                    pos2_ll my_pos{x, y};
-                    adj_entry curr_adj_entry { iter, my_pos };
-                    auto& these_results = result[curr_adj_entry];
-                    for (const auto &dir: dirs) {
-                        pos2_ll next_pos = my_pos + dir;
-                        if (cache.get({next_iter, next_pos})) {
-                            these_results.push_back({next_iter, next_pos});
-                        }
-                    }
-                }
-            }
-        }
-
-        auto num_vertices = std::count_if(result.begin(), result.end(), [](auto &pair) {
-            return pair.second.size() > 0;
-        });
-
-        size_t num_edges = 0;
-        for (const auto &pair: result) {
-            num_edges += pair.second.size();
-        }
-
-        cout << "nodes: " << num_vertices << endl;
-        cout << "edges: " << num_edges << endl;
-
-        return result;
-    }
 
     size_t a_star(
             adj_entry initial_state,
@@ -235,40 +187,16 @@ namespace day24 {
         throw logic_error("No more states");
     }
 
-    TEST(Day24, Part1) {
-        ifstream input;
-        input.open("../../test/input/day24.txt");
-//        stringstream input(sample_input);
+    const vector<pos2_t<long long>> dirs{
+            {0,  0},
+            {0,  -1},
+            {0,  1},
+            {-1, 0},
+            {1,  0},
+    };
 
-        auto in = parse_input(input);
-
-        auto adjacency = find_adjacency(in);
-
-        adj_entry initial_state{
-                0,
-                in.start
-        };
-
-        auto cost = a_star(
-                initial_state,
-                [&](const adj_entry &state) {
-                    vector<adj_entry> result;
-                    for (const auto &adj: adjacency[state]) {
-                        result.push_back(adj);
-                    }
-                    return result;
-                },
-                [&in](const adj_entry &x) {
-                    return x.pos.manhattan_distance_to(in.dest);
-                },
-                [&in](const adj_entry &state) {
-                    return state.pos == in.dest;
-                });
-
-        cout << cost << endl;
-    }
-
-    size_t run_a_star(const Input &in, const map<adj_entry, vector<adj_entry>> &adjacency, size_t steps, pos2_ll start, pos2_ll dest) {
+    size_t run_a_star(const Input &in, const safe_cache &safe, size_t steps, pos2_ll start,
+                      pos2_ll dest) {
         auto iterations = lcm(in.width, in.height);
         adj_entry initial_state{
                 steps % iterations,
@@ -279,8 +207,11 @@ namespace day24 {
                 initial_state,
                 [&](const adj_entry &state) {
                     vector<adj_entry> result;
-                    for (const auto &adj: adjacency.at(state)) {
-                        result.push_back(adj);
+                    for (const auto &dir: dirs) {
+                        adj_entry next_state{state.steps + 1, state.pos + dir};
+                        if (safe.get(next_state)) {
+                            result.push_back(next_state);
+                        }
                     }
                     return result;
                 },
@@ -294,6 +225,20 @@ namespace day24 {
         return cost;
     }
 
+    TEST(Day24, Part1) {
+        ifstream input;
+        input.open("../../test/input/day24.txt");
+//        stringstream input(sample_input);
+
+        auto in = parse_input(input);
+
+        safe_cache safe(in);
+
+        auto cost = run_a_star(in, safe, 0, in.start, in.dest);
+
+        cout << cost << endl;
+    }
+
     TEST(Day24, Part2) {
         ifstream input;
         input.open("../../test/input/day24.txt");
@@ -301,11 +246,11 @@ namespace day24 {
 
         auto in = parse_input(input);
 
-        auto adjacency = find_adjacency(in);
+        safe_cache safe(in);
 
-        size_t cost_so_far = run_a_star(in, adjacency, 0, in.start, in.dest);
-        cost_so_far += run_a_star(in, adjacency, cost_so_far, in.dest, in.start);
-        cost_so_far += run_a_star(in, adjacency, cost_so_far, in.start, in.dest);
+        size_t cost_so_far = run_a_star(in, safe, 0, in.start, in.dest);
+        cost_so_far += run_a_star(in, safe, cost_so_far, in.dest, in.start);
+        cost_so_far += run_a_star(in, safe, cost_so_far, in.start, in.dest);
 
         cout << cost_so_far << endl;
     }
