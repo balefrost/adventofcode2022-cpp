@@ -1,57 +1,70 @@
 #pragma once
 
 #include <ostream>
+#include "util.h"
 
 inline namespace {
     using namespace std;
 
-    /**
-     * Assumes Y increases top-to-bottom; X increases left-to-right (i.e. screen coords, not math coords)
-     */
-    struct pos2 {
-        int x;
-        int y;
+    template <typename T>
+    struct pos2_t {
+        T x;
+        T y;
 
-        pos2 rotate_cw_about_origin() {
+        pos2_t rotate_cw_about_origin() {
             return {-y, x};
         }
 
-        pos2 rotate_ccw_about_origin() {
+        pos2_t rotate_ccw_about_origin() {
             return {y, -x};
         }
 
-        pos2 operator+(const pos2 &b) const {
+        pos2_t operator+(const pos2_t &b) const {
             return {x + b.x, y + b.y};
         }
 
-        pos2 &operator+=(const pos2 &b) {
+        pos2_t &operator+=(const pos2_t &b) {
             x += b.x;
             y += b.y;
             return *this;
         }
 
-        pos2 operator-() const {
+        pos2_t operator-() const {
             return {-x, -y};
         }
 
-        pos2 operator-(const pos2 &b) const {
+        pos2_t operator-(const pos2_t &b) const {
             return {x - b.x, y - b.y};
         }
 
-        pos2 &operator-=(const pos2 &b) {
+        pos2_t &operator-=(const pos2_t &b) {
             x -= b.x;
             y -= b.y;
             return *this;
         }
 
-        bool operator<(const pos2 &r) const {
+        bool operator<(const pos2_t &r) const {
             return x < r.x || (x == r.x && y < r.y);
         }
 
-        bool operator==(const pos2 &r) const {
+        bool operator==(const pos2_t &r) const {
             return x == r.x && y == r.y;
         }
+
+        bool operator!=(const pos2_t &r) const {
+            return !(*this == r);
+        }
+
+        T manhattan_distance_to(pos2_t other) const {
+            return abs(other.x - x) + abs(other.y - y);
+        }
     };
+
+    /**
+     * Assumes Y increases top-to-bottom; X increases left-to-right (i.e. screen coords, not math coords)
+     */
+    using pos2 = pos2_t<int>;
+    using pos2_ll = pos2_t<long long>;
 
     pair<pos2, pos2> bounding_box(const set<pos2> &ps) {
         int xmin = numeric_limits<int>::max();
@@ -72,3 +85,13 @@ inline namespace {
         return out;
     }
 }
+
+template <typename T>
+struct std::hash<pos2_t<T>> {
+    size_t operator()(const pos2_t<T> &pos) const {
+        size_t seed = 0;
+        hash_combine(seed, pos.x);
+        hash_combine(seed, pos.y);
+        return seed;
+    }
+};

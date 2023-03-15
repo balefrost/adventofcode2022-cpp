@@ -442,4 +442,22 @@ inline namespace {
     bool set_contains(const set<Key, Compare, Allocator> &s, const Key &elem) {
         return s.find(elem) != s.end();
     }
+
+    template<typename T>
+    T posmod(T numerator, T divisor) {
+        T temp = numerator % divisor;
+        if (temp < 0) {
+            return temp + divisor;
+        } else {
+            return temp;
+        }
+    }
+
+    // stolen from https://stackoverflow.com/a/2595226, allegedly from Boost
+    template <class T>
+    inline void hash_combine(std::size_t& seed, const T& v)
+    {
+        std::hash<T> hasher;
+        seed ^= hasher(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+    }
 }
